@@ -1,43 +1,7 @@
 var screenArray = [];
 var isLost = false;
 window.onload = function () {
-    // Register a helper
-  Handlebars.registerHelper('capitalize', function(str){
-    // str is the argument passed to the helper when called
-    str = str || '';
-    return str.slice(0,1).toUpperCase() + str.slice(1);
-  });
-
-  // Grab the template script
-  // var theTemplateScript = document.getElementById("built-in-helpers-template").innerHTML;
-
-  // Compile the template
-  // var theTemplate = Handlebars.compile(theTemplateScript);
-
-  // We will call this template on an array of objects
-
-  var context = {
-    animals:[
-      {
-        name: "cow",
-        noise: "moooo"
-      },
-      {
-        name: "cat",
-        noise: "meow"
-      },
-      {
-        name: "fish",
-        noise: ""
-      },
-      {
-        name: "farmer",
-        noise: "Get off my property!"
-      }
-    ],
-      grid: genrateGrid()
-  };
-
+        genrateGrid();
 
         var outerDiv = document.createElement('div');
         outerDiv.id = 'alert-modal';
@@ -94,40 +58,26 @@ window.onload = function () {
         top.appendChild(counter2);
         var content = document.createElement('div');
         content.className = 'content-placeholder';
-        // var contentParent =  document.createElement('div');
-        // contentParent.className = 'content-parent';
         initScreen(content);
         windowDiv.appendChild(content);
         document.body.appendChild(windowDiv);
         document.body.appendChild(outerDiv);
-
-
-
-  // Pass our data to the template
-  // var theCompiledHtml = theTemplate(context);
-
-  // Add the compiled html to the page
-  // document.getElementsByClassName('content-placeholder')[0].innerHTML = theCompiledHtml;
 }
 
 function genrateGrid() {
     for (var i = 0 ; i < 10 ; i++) {
-    screenArray[i] = []; // Initialize inner array
-      for (var j = 0; j < 10; j++) { // i++ needs to be j++
-        screenArray[i][j] = false;
+    screenArray[i] = [];
+      for (var j = 0; j < 10; j++) {
+        screenArray[i][j] = 0;
       }
   }
 
     for(var i = 0; i<10; i++){
       var width = (Math.random()* 10 | 0);
       var height = (Math.random()* 10 | 0);
-      screenArray[width][height] = true;
-      // console.log(width + " , " + height);
+      screenArray[width][height] = 1;
     }
     console.table(screenArray);
-
-  // console.log(width);
-
     return screenArray
 }
 
@@ -141,35 +91,23 @@ function initScreen(content) {
             let btn= document.createElement('Button');
                 btn.classList.add("col");
             btn.id = i;
-            // if(screenArray[i][j] === true)
-            //     btn.style.backgroundColor = "red";
+            if(screenArray[i][j] === 1)
+                btn.style.backgroundColor="red";
             btn.onclick=function () {
                 btn.classList.add("col-clicked");
                 let bombs = clicked(i,j);
-                // console.log("bombs "+bombs);
+                console.log("bombs "+bombs);
                 // let bombs = 0;
                 if(!isLost ) {
                     if(bombs !== 0)
                         btn.innerHTML = bombs;
-                    // if (bombs === 0){
-                    //     btn.style.color = "#88BFE8";
-                    // }
-                    if (bombs === 1)
-                        btn.style.color = "blue";
-                    if (bombs === 2)
-                        btn.style.color = "green";
-                    if (bombs === 3)
-                        btn.style.color = "red";
-                    if (bombs === 4)
-                        btn.style.color = "darkblue";
-                    if (bombs === 5)
-                        btn.style.color = "darkred";
-                    if (bombs === 6)
-                        btn.style.color = "yellow";
-                    if (bombs === 7)
-                        btn.style.color = "orange";
-                    if (bombs === 8)
-                        btn.style.color = "pink";
+                    if (bombs === 0){
+                        screenArray[i][j] = 2;
+                        revealNeighbours(i,j);
+                        // console.table(screenArray);
+                    }
+                    else
+                        showBombCount(i,j);
                 }
             }
             rowDiv.appendChild(btn);
@@ -180,11 +118,11 @@ function initScreen(content) {
 
 
 function clicked(width, height) {
-        if(screenArray[width][height] === true){
+        if(screenArray[width][height] === 1){
             isLost = true;
             for(let i=0; i<10; i++){
                 for(let j=0;j<10; j++){
-                    if(screenArray[i][j]=== true){
+                    if(screenArray[i][j]=== 1){
                         document.getElementsByClassName("row")[j].getElementsByClassName("col")[i].style.backgroundColor = "red";
                         // let ddd = document.getElementById(i);
                         // console.log(ddd.id);
@@ -195,23 +133,143 @@ function clicked(width, height) {
             }
              // alert("you lost");
         }
+        return findBombCount(width,height);
+}
 
+function revealNeighbours(height,width){ // a recursive function
+
+        console.log("revealing neighbours for : "+height + " , " +width);
+        if ((width - 1 > 0) && (height - 1 > 0) && (screenArray[height-1][width-1] !== 2) && findBombCount(height - 1, width - 1) === 0) {
+            screenArray[height-1][width-1] = 2;
+            revealNeighbours(height - 1, width - 1);
+            document.getElementsByClassName("row")[width-1].getElementsByClassName("col")[height-1].classList.add("col-clicked");
+
+        }
+        if ((width - 1 > 0) && (height - 1 > 0) && (screenArray[height-1][width-1] !== 2) && findBombCount(height - 1, width - 1) !== 0)
+            showBombCount(height-1 , width-1);
+
+        if ((height - 1 > 0) && (screenArray[height-1][width] !== 2) && findBombCount(height - 1, width) === 0) {
+            screenArray[height - 1][width] = 2;
+            revealNeighbours(height - 1, width);
+            document.getElementsByClassName("row")[width].getElementsByClassName("col")[height-1].classList.add("col-clicked");
+        }
+        if ((height - 1 > 0) && (screenArray[height-1][width] !== 2) && findBombCount(height - 1, width) !== 0)
+            showBombCount(height-1 , width);
+
+        if ((height - 1 > 0) && (width + 1 < 10) && (screenArray[height-1][width+1] !== 2) && findBombCount(height - 1, width + 1) === 0) {
+            screenArray[height - 1][width + 1] = 2;
+            revealNeighbours(height - 1, width + 1);
+            document.getElementsByClassName("row")[width+1].getElementsByClassName("col")[height-1].classList.add("col-clicked");
+        }
+        if ((height - 1 > 0) && (width + 1 < 10) && (screenArray[height-1][width+1] !== 2) && findBombCount(height - 1, width + 1) !== 0)
+            showBombCount(height-1 , width+1);
+
+        if ((width - 1 > 0) && (screenArray[height][width-1] !== 2) && findBombCount(height, width - 1) === 0) {
+            screenArray[height][width - 1] = 2;
+            revealNeighbours(height, width - 1);
+            document.getElementsByClassName("row")[width-1].getElementsByClassName("col")[height].classList.add("col-clicked");
+        }
+        if ((width - 1 > 0) && (screenArray[height][width-1] !== 2) && findBombCount(height, width - 1) !== 0)
+            showBombCount(height , width-1);
+
+        if ((width + 1 < 10) && (screenArray[height][width+1] !== 2) && findBombCount(height, width + 1) === 0) {
+            screenArray[height][width + 1] = 2;
+            revealNeighbours(height, width + 1);
+            document.getElementsByClassName("row")[width+1].getElementsByClassName("col")[height].classList.add("col-clicked");
+        }
+        if ((width + 1 < 10) && (screenArray[height][width+1] !== 2) && findBombCount(height, width + 1) !== 0)
+            showBombCount(height , width+1);
+
+        if ((height + 1 < 10) && (width - 1 > 0) && (screenArray[height+1][width-1] !== 2) && findBombCount(height + 1, width - 1) === 0) {
+            screenArray[height + 1][width - 1] = 2;
+            revealNeighbours(height + 1, width - 1);
+            document.getElementsByClassName("row")[width-1].getElementsByClassName("col")[height+1].classList.add("col-clicked");
+        }
+        if ((height + 1 < 10) && (width - 1 > 0) && (screenArray[height+1][width-1] !== 2) && findBombCount(height + 1, width - 1) !== 0)
+            showBombCount(height+1 , width-1);
+
+        if ((height + 1 < 10) && (screenArray[height+1][width] !== 2) && findBombCount(height + 1, width) === 0) {
+            screenArray[height + 1][width] = 2;
+            revealNeighbours(height + 1, width);
+            document.getElementsByClassName("row")[width].getElementsByClassName("col")[height+1].classList.add("col-clicked");
+        }
+        if ((height + 1 < 10) && (screenArray[height+1][width] !== 2) && findBombCount(height + 1, width) !== 0)
+            showBombCount(height+1 , width);
+
+        if ((height + 1 < 10) && (width + 1 < 10) && (screenArray[height+1][width+1] !== 2) && findBombCount(height + 1, width + 1) === 0) {
+            screenArray[height + 1][width + 1] = 2;
+            revealNeighbours(height + 1, width + 1);
+            document.getElementsByClassName("row")[width+1].getElementsByClassName("col")[height+1].classList.add("col-clicked");
+        }
+        if ((height + 1 < 10) && (width + 1 < 10) && (screenArray[height+1][width+1] !== 2) && findBombCount(height + 1, width + 1) !== 0)
+            showBombCount(height+1 , width+1);
+
+}
+
+function findBombCount(width, height){
     let bombCount = 0;
-    if((width-1>-1) && (height-1>-1) && screenArray[width-1][height-1] === true)
+    if((width-1>-1) && (height-1>-1) && screenArray[width-1][height-1] === 1)
         bombCount++;
-    if((width-1>-1) && screenArray[width-1][height] === true)
+    if((width-1>-1) && screenArray[width-1][height] === 1)
         bombCount++;
-    if((width-1>-1) && (height+1<10) && screenArray[width-1][height+1] === true)
+    if((width-1>-1) && (height+1<10) && screenArray[width-1][height+1] === 1)
         bombCount++;
-    if((height+1<10) && screenArray[width][height+1] === true)
+    if((height+1<10) && screenArray[width][height+1] === 1)
         bombCount++;
-    if((width+1<10) && (height+1<10) && screenArray[width+1][height+1] === true)
+    if((width+1<10) && (height+1<10) && screenArray[width+1][height+1] === 1)
         bombCount++;
-    if((width+1<10) && screenArray[width+1][height] === true)
+    if((width+1<10) && screenArray[width+1][height] === 1)
         bombCount++;
-    if((width+1<10) && (height-1>-1) && screenArray[width+1][height-1] === true)
+    if((width+1<10) && (height-1>-1) && screenArray[width+1][height-1] === 1)
         bombCount++;
-    if((height-1>-1) && screenArray[width][height-1] === true)
+    if((height-1>-1) && screenArray[width][height-1] === 1)
         bombCount++;
+    // console.log("number of bombs around " + width+ " , "+ height+ " : " + bombCount);
     return bombCount;
+}
+
+function showBombCount(i, j) {
+    document.getElementsByClassName("row")[j].getElementsByClassName("col")[i].innerHTML = findBombCount(i, j);
+    document.getElementsByClassName("row")[j].getElementsByClassName("col")[i].classList.add("col-clicked");
+    let color;
+
+    switch(findBombCount(i, j)) {
+        case 1: {
+            color = "blue";
+        }
+            break;
+        case 2: {
+            color = "green";
+        }
+            break;
+        case 3 :{
+            color = "red";
+        }
+            break;
+        case 4 :{
+            color = "darkblue";
+        }
+            break;
+        case 5 :{
+            color = "darkred";
+        }
+            break;
+        case 6 :{
+            color = "yellow";
+        }
+            break;
+        case 7 :{
+            color = "orange";
+        }
+            break;
+        case 8 :{
+            color = "pink";
+        }
+            break;
+        default:
+            color = "black";
+    }
+
+    document.getElementsByClassName("row")[j].getElementsByClassName("col")[i].style.color = color;
+
 }
