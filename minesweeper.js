@@ -76,14 +76,11 @@ function initialize() {
         var counter1 = document.createElement('span');
         counter1.className = 'counter';
         counter1.id = "counter-1";
-        // counter1.appendChild(document.createTextNode("123"));
         counter1.innerHTML = clickCount;
         windowDiv.appendChild(top);
         var counter2 = document.createElement('span');
         counter2.className = 'counter';
         counter2.id = 'counter-2';
-        // counter2.innerHTML = distance;
-        // counter2.appendChild(document.createTextNode("321"));
         var smile = document.createElement('span');
         smile.className = 'smile';
         smile.setAttribute('data-value','normal');
@@ -109,12 +106,11 @@ function initScreen(content) {
             let btn= document.createElement('Button');
                 btn.classList.add("col");
             btn.id = i;
-            if(screenArray[i][j] === 1)
-                btn.style.backgroundColor="darkred";
+            // if(screenArray[i][j] === 1)  // in order to cheat, so we can see where the bombs are
+            //     btn.style.backgroundColor="darkred";
             btn.onclick=function () {
                 if(clickCount === 0) {
                     started = true;
-                    // console.log("now" + now);
                 }
                 if(document.getElementsByClassName("row")[j].getElementsByClassName("col")[i].innerHTML !== '⛿') {
                     if(!btn.classList.contains("col-clicked")) {
