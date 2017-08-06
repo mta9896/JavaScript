@@ -1,5 +1,15 @@
 var screenArray = [];
-var isLost = false;
+var clickCount =0;
+var seconds = 120;
+var started = false;
+var x = setInterval(function() {
+    if(started) {
+        seconds--;
+        document.getElementById("counter-2").innerHTML = seconds;
+        loseTimeOut();
+    }
+}, 1000);
+
 window.onload = function () {
         genrateGrid();
         initialize();
@@ -65,11 +75,15 @@ function initialize() {
         top.className = 'top';
         var counter1 = document.createElement('span');
         counter1.className = 'counter';
-        counter1.appendChild(document.createTextNode("123"));
+        counter1.id = "counter-1";
+        // counter1.appendChild(document.createTextNode("123"));
+        counter1.innerHTML = clickCount;
         windowDiv.appendChild(top);
         var counter2 = document.createElement('span');
         counter2.className = 'counter';
-        counter2.appendChild(document.createTextNode("321"));
+        counter2.id = 'counter-2';
+        // counter2.innerHTML = distance;
+        // counter2.appendChild(document.createTextNode("321"));
         var smile = document.createElement('span');
         smile.className = 'smile';
         smile.setAttribute('data-value','normal');
@@ -95,29 +109,34 @@ function initScreen(content) {
             let btn= document.createElement('Button');
                 btn.classList.add("col");
             btn.id = i;
-            // if(screenArray[i][j] === 1)
-            //     btn.style.backgroundColor="darkred";
+            if(screenArray[i][j] === 1)
+                btn.style.backgroundColor="darkred";
             btn.onclick=function () {
-                btn.classList.add("col-clicked");
-                let bombs = findBombCount(i,j);
-                console.log("bombs "+bombs);
-                if(!lose(i,j) ) {
-                    if(bombs !== 0) {
-                        btn.innerHTML = bombs;
-                    }
-                    if (bombs === 0){
-                        screenArray[i][j] = 2;
-                        revealNeighbours(i,j);
-                    }
-                    else
-                        showBombCount(i,j);
+                if(clickCount === 0) {
+                    started = true;
+                    // console.log("now" + now);
                 }
-                else{ //when player loses
-
-
+                if(document.getElementsByClassName("row")[j].getElementsByClassName("col")[i].innerHTML !== '⛿') {
+                    if(!btn.classList.contains("col-clicked")) {
+                        clickCount++;
+                        document.getElementById("counter-1").innerHTML = clickCount;
+                    }
+                    btn.classList.add("col-clicked");
+                    let bombs = findBombCount(i, j);
+                    console.log("bombs " + bombs);
+                    if (!lose(i, j)) {
+                        if (bombs !== 0) {
+                            btn.innerHTML = bombs;
+                        }
+                        if (bombs === 0) {
+                            screenArray[i][j] = 2;
+                            revealNeighbours(i, j);
+                        }
+                        else
+                            showBombCount(i, j);
+                    }
+                    win();
                 }
-                console.table(screenArray);
-                win();
             }
             btn.onmousedown = function(event) {
                 if (event.which == 3) {
@@ -281,6 +300,7 @@ function showBombCount(i, j) {
 
 function setFlag(height,width) {
     if(document.getElementsByClassName("row")[width].getElementsByClassName("col")[height].innerHTML == '⛿') {
+        document.getElementsByClassName("row")[width].getElementsByClassName("col")[height].innerHTML = ' ';
     }
     else{
         document.getElementsByClassName("row")[width].getElementsByClassName("col")[height].innerHTML = '⛿';
@@ -305,7 +325,7 @@ function win() {
         let text = document.createTextNode("You Won");
         winAlert.appendChild(text);
         let okButton = document.createElement('Button');
-        let okText = document.createTextNode("");
+        let okText = document.createTextNode("New Game");
         okButton.appendChild(okText);
         okButton.className = 'ok-button';
         winAlert.appendChild(okButton);
@@ -313,14 +333,16 @@ function win() {
         okButton.onclick = function(){
             document.body.removeChild(winAlert);
             document.body.removeChild(document.getElementsByClassName('window')[0]);
+            clickCount=0;
             genrateGrid();
             initialize();
+            document.getElementById("counter-1").innerHTML = clickCount;
         }
     }
 }
 
 function lose(height,width) {
-    var isLost = false;
+    let isLost = false;
     if(screenArray[height][width] === 1){
             isLost = true;
             for(let i=0; i<10; i++){
@@ -331,6 +353,10 @@ function lose(height,width) {
 
                 }
             }
+        }
+        if(seconds  === 0) {
+            isLost = true;
+            console.log("time out");
         }
         if(isLost){
             var loseAlert = document.createElement('div');
@@ -346,10 +372,44 @@ function lose(height,width) {
             okButton.onclick = function(){
                 document.body.removeChild(loseAlert);
                 document.body.removeChild(document.getElementsByClassName('window')[0]);
+                clickCount=0;
                 genrateGrid();
                 initialize();
+                document.getElementById("counter-1").innerHTML = clickCount;
             }
         }
         return isLost;
     
+}
+
+function loseTimeOut() {
+    let isLost = false;
+    if(seconds  === 0) {
+            isLost = true;
+            console.log("time out");
+        }
+        if(isLost){
+            started = false;
+            seconds = 120;
+            var loseAlert = document.createElement('div');
+            loseAlert.className = 'win-lose-alert';
+            let text = document.createTextNode("You Lost");
+            loseAlert.appendChild(text);
+            let okButton = document.createElement('Button');
+            let okText = document.createTextNode("New Game");
+            okButton.appendChild(okText);
+            okButton.className = 'ok-button';
+            loseAlert.appendChild(okButton);
+            document.body.appendChild(loseAlert);
+            okButton.onclick = function(){
+                document.body.removeChild(loseAlert);
+                document.body.removeChild(document.getElementsByClassName('window')[0]);
+                clickCount=0;
+                genrateGrid();
+                initialize();
+                document.getElementById("counter-1").innerHTML = clickCount;
+            }
+        }
+
+
 }
